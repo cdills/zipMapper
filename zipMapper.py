@@ -1,10 +1,8 @@
 import folium
 import pandas as pd
 
-
 state_geo="./resources/geojson/nc.geojson"
-m = folium.Map(location=[35.7, -81.21])
-
+m = folium.Map(location=[35.8, -78.64], tiles = 'Mapbox Bright', prefer_canvas=True, zoom_start=8)
 
 df = pd.read_csv("./resources/zipsToDraw.csv", na_values=[''])
 df.set_index('index', inplace=True)
@@ -16,15 +14,15 @@ def style_function(feature):
 
     if str(featureZip) in str(zip):
       return {
-        'fillOpacity': 1.00,
-           'weight': 1,
-          'fillColor': '#black'
+        'fillOpacity': .5,
+           'weight': 0.4,
+          'fillColor': 'red'
       }
     else:
         return {
         'fillOpacity': 0.0,
         'weight': 0,
-        'fillColor': '#red'
+        'fillColor': ''
         }
 
 folium.GeoJson(
