@@ -1,11 +1,31 @@
 import folium
 import pandas as pd
+import os
 
-state_geo="./resources/geojson/nc.geojson"
-m = folium.Map(location=[35.8, -78.64], tiles = 'Mapbox Bright', prefer_canvas=True, zoom_start=8)
+#init variablaes
+geoDir =  './resources/geojson/'
+geoDirSimple = './resources/simple/'
+doSimple = True
+csvZipsToDraw = './resources/zipsToDraw.csv'
+#state_geo="./resources/geojson/nc.geojson"
 
-df = pd.read_csv("./resources/zipsToDraw.csv", na_values=[''])
+df = pd.read_csv(csvZipsToDraw, na_values=[''])
 df.set_index('index', inplace=True)
+#m = folium.Map(location=[35.8, -78.64], tiles = 'Mapbox Bright', prefer_canvas=True, zoom_start=8)
+
+
+
+def parseGeoJson(directory, map):
+    files = os.listdir(directory)
+
+    for file in files:
+        geoJson = directory + file
+        folium.GeoJson(
+            geoJson,
+            name='geojson',
+            style_function=style_function
+        ).add_to(map)
+
 
 def style_function(feature):
     properties = feature['properties']
@@ -25,10 +45,14 @@ def style_function(feature):
         'fillColor': ''
         }
 
-folium.GeoJson(
-    state_geo,
-    name='geojson',
-    style_function=style_function
-).add_to(m)
+def drawMap():
+    m = folium.Map(location=[35.8, -78.64], tiles='Mapbox Bright', prefer_canvas=True, zoom_start=8)
+    parseGeoJson(geoDir, m)
+    m.save('map.html')
 
-m.save('map.html')
+    if doSimple:
+        s = folium.Map(location=[35.8, -78.64], tiles='Mapbox Bright', prefer_canvas=True, zoom_start=8)
+        parseGeoJson(geoDirSimple, s)
+        s.save('mapSimple.html')
+
+drawMap()
