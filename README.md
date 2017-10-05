@@ -1,4 +1,4 @@
-#zipMapper
+# zipMapper
 
 Easily plot and shade US Zip Code regions.
 
