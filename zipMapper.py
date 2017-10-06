@@ -1,23 +1,52 @@
 import folium
 import pandas as pd
 import os
-
-doCounty = True
-doSimple = True
-doZip = True
+import pyodbc
+import configparser
 
 
-geoDir =  './resources/geojson/'
-geoDirSimple = './resources/simple/'
-geoDirCounty = './resources/county/'
-csvZipsToDraw = './resources/zipsToDraw.csv'
-countiesToDraw = './resources/countiesToDraw.csv'
+Config = configparser.ConfigParser()
+Config.read(".\config.ini")
+
+dbMode = Config.getboolean('mode', 'dbmode')
 
 
-df = pd.read_csv(csvZipsToDraw, na_values=[''])
-df.set_index('index', inplace=True)
-dfC = pd.read_csv(countiesToDraw, na_values=[''])
+if dbMode:
+    dbCounties = []
+    dbZip = []
+    driver = Config.get('db', 'driver')
+    server = Config.get('db', 'server')
+    database = Config.get('db', 'database')
+    uid = Config.get('db', 'uid')
+    pwd = Config.get('db', 'pwd')
+    con = pyodbc.connect(driver=driver, server=server, database=database, uid=uid, pwd=pwd)
+    cur = con.cursor()
+    db_cmd = Config.get('db', 'cmd')
+    cur = cur.execute(db_cmd)
 
+    for r in cur:
+        dbCounties.append(r[1])
+        dbZip.append(r[2])
+else:
+    csvZipsToDraw = Config.get('files', 'csvZipsToDraw')
+    countiesToDraw = Config.get('files', 'countiesToDraw')
+
+    df = pd.read_csv(csvZipsToDraw, na_values=[''])
+    df.set_index('index', inplace=True)
+    dfC = pd.read_csv(countiesToDraw, na_values=[''])
+
+doCounty = Config.getboolean('styles', 'doCounty')
+doSimple = Config.getboolean('styles', 'doSimple')
+doZip = Config.getboolean('styles', 'doZip')
+
+if doCounty:
+    geoDirCounty = Config.get('files', 'geoDirCounty')
+if doSimple:
+    geoDirSimple = Config.get('files', 'geoDirSimple')
+if doZip:
+    geoDir = Config.get('files', 'geoDir')
+if not doCounty and not doSimple and not doZip:
+    exit("no style selected")
 
 
 
@@ -47,7 +76,10 @@ def parseGeoJson(directory, map, style):
 def style_function(feature):
     properties = feature['properties']
     featureZip= properties['ZCTA5CE10']
-    zip = df.values
+    if dbMode:
+        zip = dbZip
+    else:
+        zip = df.values
 
     if str(featureZip) in str(zip):
       return {
@@ -63,12 +95,16 @@ def style_function(feature):
         }
 
 def style_functionCounty(feature):
-    counties = dfC['County'].tolist()
+    if dbMode:
+        counties = dbCounties
+    else:
+        counties = dfC['County'].tolist()
+
     properties = feature['properties']
     featureCounty= properties['NAME10']
     stateFP= properties['STATEFP10']
 
-    def iterateCSV():
+    def iterate():
         for item in counties:
 
             if str(checkFeature) == item:
@@ -88,17 +124,17 @@ def style_functionCounty(feature):
     if stateFP == "51":
         stateTag = "VA"
         checkFeature = str(featureCounty) + ' ' + stateTag
-        style = iterateCSV()
+        style = iterate()
         return style
     if stateFP == "45":
         stateTag = "SC"
         checkFeature = str(featureCounty) + ' ' + stateTag
-        style = iterateCSV()
+        style = iterate()
         return style
     if stateFP == "37":
         stateTag = "NC"
         checkFeature = str(featureCounty) + ' ' + stateTag
-        style = iterateCSV()
+        style = iterate()
         return style
 
 def drawMap():
