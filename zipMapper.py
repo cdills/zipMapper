@@ -104,38 +104,26 @@ def style_functionCounty(feature):
     featureCounty= properties['NAME10']
     stateFP= properties['STATEFP10']
 
-    def iterate():
-        for item in counties:
+    checkFeature = str(featureCounty) + ' ' + stateFP
 
-            if str(checkFeature) == item:
 
-                return {
-                    'fillOpacity': .5,
-                    'weight': 0.4,
-                    'fillColor': 'red'
-                }
-        else:
+    for item in counties:
+
+        if str(checkFeature) == item:
+
             return {
-                'fillOpacity': 0.0,
-                'weight': 0,
-                'fillColor': ''
+                'fillOpacity': .5,
+                'weight': 0.4,
+                'fillColor': 'red'
             }
+    else:
+        return {
+            'fillOpacity': 0.0,
+            'weight': 0,
+            'fillColor': ''
+        }
 
-    if stateFP == "51":
-        stateTag = "VA"
-        checkFeature = str(featureCounty) + ' ' + stateTag
-        style = iterate()
-        return style
-    if stateFP == "45":
-        stateTag = "SC"
-        checkFeature = str(featureCounty) + ' ' + stateTag
-        style = iterate()
-        return style
-    if stateFP == "37":
-        stateTag = "NC"
-        checkFeature = str(featureCounty) + ' ' + stateTag
-        style = iterate()
-        return style
+
 
 def drawMap():
     if doZip:
